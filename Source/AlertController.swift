@@ -318,6 +318,8 @@ public class AlertController: UIViewController {
                 self?.dismiss(animated: true) {
                     action.handler?(action)
                 }
+            } else {
+                action.handler?(action)
             }
         }
 
