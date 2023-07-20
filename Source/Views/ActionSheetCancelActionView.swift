@@ -104,20 +104,16 @@ final class ActionSheetCancelActionView: UIView {
 
 private extension UIImage {
     static func image(with color: UIColor) -> UIImage? {
-        defer { UIGraphicsEndImageContext() }
-
-        let rect = CGRect(x: 0, y: 0, width: 1, height: 1)
-
-        UIGraphicsBeginImageContextWithOptions(rect.size, false, 0)
-
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return nil
+            let rect = CGRect(x: 0, y: 0, width: 1, height: 1)
+            let renderer = UIGraphicsImageRenderer(size: rect.size)
+            
+            let result = renderer.image { context in
+                color.setFill()
+                context.cgContext.fill(rect)
+            }
+            
+            return result
         }
-
-        color.setFill()
-        context.fill(rect)
-        return UIGraphicsGetImageFromCurrentImageContext()
-    }
 }
 
 final class PassthroughEffectView: UIVisualEffectView {
