@@ -1,5 +1,69 @@
 # CHANGELOG
 
+## 12.0.3
+**What's New**:
+- Fix issue where alert wouldn't animate back in place after dismissing the
+  keyboard
+
+## 12.0.2
+**What's New**:
+- Fix occasional crash on iOS 15
+
+## 12.0.1
+**What's New**:
+- Proper use of semantic versioning
+
+## 12.0
+**What's New**:
+- Support for Swift Package Manager
+
+### 11.1.2
+**Bug Fixes:**
+- Fix incorrect padding for content views in action sheets
+
+### 11.1.1
+**What's New:**
+- Refactored the action sheet UI to code, eliminating the hard-to-understand XIB
+
+## 11.1
+**What's New:**
+- Action sheets can now receive an image view on the left and accessory view on the right of each action
+- The color of the chrome/dimming view can now be set on visual styles
+- The spacing between title/message labels has been updated to the ones
+  `UIAlertController` uses
+  
+
+**Bug Fixes:**
+- View controllers presented from alerts/action sheets aren't dismissed
+  anymore when using the alert's `dismiss()` method
+- The area around text fields is now the same background color as alerts when one is set
+- Dark mode appearances are more like the native `UIAlertController` ones
+
+## 11.0
+**What's New:**
+- Dark Mode support on iOS 13.
+
+## 10.0
+This release brings Swift 5.0 compatibility.
+
+### 9.0.1
+**Bug Fixes:**
+- Fixes incorrect margins for new iPhones
+
+## 9.0
+This release brings Swift 4.2 compatibility.
+
+### 8.1.1
+**Bug Fixes:**
+- Fixes incorrect spacing when an action sheet doesn't have a label
+
+## 8.1
+This release brings Swift 4.1 compatibility.
+
+**Bug Fixes:**
+- Fixes build issues when using the new build system and CocoaPods
+- Fixes a missing `contentView` in action sheets
+
 ## 8.0.2
 **Bug Fixes:**
 - Fixes the inverted `dismissOnOutsideTap` behavior for alert views

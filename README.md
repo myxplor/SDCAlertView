@@ -2,11 +2,6 @@
 
 `SDCAlertView` started out as an alert that looked identical to `UIAlertView`, but had support for a custom content view. With the introduction of `UIAlertController` in iOS 8, the project was updated to the more modern API that `UIAlertController` brought.
 
-<div align="center">
-    <img src="http://sberrevoets.github.io/SDCAlertView/ActionSheet.gif">
-    <img src="http://sberrevoets.github.io/SDCAlertView/Alert.gif">
-</div>
-
 ## Features
 
 - [x] Most `UIAlertController` functionality
@@ -24,7 +19,7 @@
 
 # Requirements
 
- - Swift 4
+ - Swift 5.0
  - iOS 9 or higher
 
 # Installation
@@ -53,7 +48,12 @@ github "sberrevoets/SDCAlertView"
 Run `carthage update` and drag `SDCAlertView.framework` in the `Build` folder into your project.
 
 ## Swift Package Manager
-SPM does not yet support iOS, but SDCAlertView will be available there once it does.
+
+To install with Swift Package Manager, add this package to your project’s 'Swift Packages' section. Or add the following line to your `Package.swift`:
+
+```swift
+ .package(url: "https://github.com/sberrevoets/SDCAlertView.git", from: "12.0.1")
+```
 
 # Alerts vs. Action Sheets
 
@@ -112,9 +112,6 @@ alert.present()
 `SDCAlertController` is a normal view controller, so applying a `tintColor` to its `view` will color the buttons and any subviews you add to the `contentView`.
 
 If you are looking for more customizations, create a subclass of `AlertVisualStyle` and use `visualStyle` on the `AlertController` instance. You can also create an instance of `AlertVisualStyle` and overwrite the attributes you need (this is mainly intended to be used from Objective-C). Note that after an alert has been presented, changing any of these settings is ignored.
-
-# Support
-I'm pretty active on [Stack Overflow](http://stackoverflow.com/users/751268/scott-berrevoets), so please use that if you have any questions. If you are experiencing bugs, feel free to post an issue or submit a pull request.
 
 # License
 

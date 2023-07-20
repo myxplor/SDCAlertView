@@ -1,125 +1,85 @@
-final class ActionSheetView: UIView, AlertControllerViewRepresentable {
-    @IBOutlet var titleLabel: AlertLabel!
-    @IBOutlet var messageLabel: AlertLabel!
-    @IBOutlet var actionsCollectionView: ActionsCollectionView!
-    @IBOutlet var contentView: UIView!
-    @IBOutlet private var primaryView: UIView!
-    @IBOutlet private var labelsContainer: UIView!
-    @IBOutlet private var cancelActionView: UIView!
-    @IBOutlet private var cancelLabel: UILabel!
-    @IBOutlet private var cancelButton: UIButton!
-    @IBOutlet private var collectionViewHeightConstraint: NSLayoutConstraint!
-    @IBOutlet private var cancelHeightConstraint: NSLayoutConstraint!
-    @IBOutlet private var titleWidthConstraint: NSLayoutConstraint!
+import UIKit
 
+@available(iOSApplicationExtension, unavailable)
+final class ActionSheetView: UIView, AlertControllerViewRepresentable {
+    private let primaryView = ActionSheetPrimaryView()
+    private let cancelView = ActionSheetCancelActionView()
+
+    var title: NSAttributedString? {
+        get { return self.primaryView.title }
+        set { self.primaryView.title = newValue }
+    }
+
+    var message: NSAttributedString? {
+        get { return self.primaryView.message }
+        set { self.primaryView.message = newValue }
+    }
+
+    var contentView = UIView()
+    var topView: UIView { self }
     var actions: [AlertAction] = []
+    var visualStyle: AlertVisualStyle!
 
     var actionTappedHandler: ((AlertAction) -> Void)? {
-        didSet { self.actionsCollectionView.actionTapped = self.actionTappedHandler }
-    }
-
-    var visualStyle: AlertVisualStyle! {
         didSet {
-            let widthOffset = self.visualStyle.contentPadding.left + self.visualStyle.contentPadding.right
-            self.titleWidthConstraint.constant -= widthOffset
+            self.primaryView.actionTapped = self.actionTappedHandler
+            self.cancelView.cancelTapHandler = self.actionTappedHandler
         }
-    }
-
-    private var cancelAction: AlertAction? {
-        didSet { self.cancelLabel.attributedText = self.cancelAction?.attributedTitle }
     }
 
     func prepareLayout() {
-        self.assignCancelAction()
+        self.contentView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(self.primaryView)
+        self.addSubview(self.cancelView)
 
-        self.actionsCollectionView.actions = self.actions
-        self.actionsCollectionView.visualStyle = self.visualStyle
-
-        self.collectionViewHeightConstraint.constant = self.actionsCollectionView.displayHeight
-        self.collectionViewHeightConstraint.isActive = true
-
-        self.primaryView.layer.cornerRadius = self.visualStyle.cornerRadius
-        self.primaryView.layer.masksToBounds = true
-        self.cancelActionView.layer.cornerRadius = self.visualStyle.cornerRadius
-        self.cancelActionView.layer.masksToBounds = true
-
-        if let cancelAction = self.cancelAction {
-            self.cancelButton.setupAccessibility(using: cancelAction)
+        if let cancelAction = self.assignCancelAction() {
+            self.cancelView.buildView(cancelAction: cancelAction, visualStyle: self.visualStyle)
         }
 
-        if let backgroundColor = self.visualStyle.backgroundColor {
-            self.primaryView.backgroundColor = backgroundColor
-            self.cancelActionView.backgroundColor = backgroundColor
-        }
+        self.primaryView.buildView(actions: self.actions, contentView: self.contentView,
+                                   visualStyle: self.visualStyle)
 
-        self.cancelLabel.font = self.visualStyle.font(for: self.cancelAction)
-        self.cancelLabel.textColor = self.visualStyle.textColor(for: self.cancelAction) ?? self.tintColor
-        self.cancelLabel.attributedText = self.cancelAction?.attributedTitle
 
-        let cancelButtonBackground = UIImage.image(with: self.visualStyle.actionHighlightColor)
-        self.cancelButton.setBackgroundImage(cancelButtonBackground, for: .highlighted)
-        self.cancelHeightConstraint.constant = self.visualStyle.actionViewSize.height
+        NSLayoutConstraint.activate([
+            self.primaryView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            self.primaryView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            self.primaryView.topAnchor.constraint(equalTo: self.topAnchor),
 
-        let noTextProvided = self.title?.string.isEmpty != false && self.message?.string.isEmpty != false
-        let contentViewProvided = self.contentView.subviews.count > 0
-        self.labelsContainer.isHidden = noTextProvided || contentViewProvided
+            self.primaryView.bottomAnchor.constraint(equalTo: self.cancelView.topAnchor, constant: -8),
+
+            self.cancelView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            self.cancelView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            self.cancelView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+        ])
     }
 
-    func addDragTapBehavior() {
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.highlightAction(for:)))
-        self.addGestureRecognizer(panGesture)
-    }
-
-    @objc
-    private func highlightAction(for sender: UIPanGestureRecognizer) {
-        self.actionsCollectionView.highlightAction(for: sender)
-
-        let cancelIsSelected = self.cancelActionView.frame.contains(sender.location(in: self))
-        self.cancelButton.isHighlighted = cancelIsSelected
-
-        if cancelIsSelected && sender.state == .ended {
-            self.cancelButton.sendActions(for: .touchUpInside)
-        }
-    }
-
-    override func tintColorDidChange() {
-        super.tintColorDidChange()
-        self.cancelLabel.textColor = self.visualStyle.textColor(for: self.cancelAction) ?? self.tintColor
-    }
-
-    @IBAction private func cancelTapped() {
-        guard let action = self.cancelAction else {
+    func add(_ behaviors: AlertBehaviors) {
+        if !behaviors.contains(.dragTap) {
             return
         }
 
-        self.actionTappedHandler?(action)
+        let panGesture = UIPanGestureRecognizer()
+        panGesture.cancelsTouchesInView = false
+        panGesture.addTarget(self.primaryView, action: #selector(self.primaryView.highlightAction(for:)))
+        panGesture.addTarget(self.cancelView, action: #selector(self.cancelView.highlightAction(for:)))
+        self.addGestureRecognizer(panGesture)
     }
 
-    private func assignCancelAction() {
-        if let cancelActionIndex = self.actions.index(where: { $0.style == .preferred }) {
-            self.cancelAction = self.actions[cancelActionIndex]
-            self.actions.remove(at: cancelActionIndex)
-        } else {
-            self.cancelAction = self.actions.first
-            self.actions.removeFirst()
+    // MARK: - Private
+
+    private func assignCancelAction() -> AlertAction? {
+        if actions.isEmpty {
+            return nil
         }
-    }
-}
-
-private extension UIImage {
-
-    class func image(with color: UIColor) -> UIImage {
-        let rect = CGRect(x: 0, y: 0, width: 1, height: 1)
-
-        UIGraphicsBeginImageContextWithOptions(rect.size, false, 0)
-
-        let context = UIGraphicsGetCurrentContext()!
-        color.setFill()
-        context.fill(rect)
-
-        let image = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-
-        return image
+        
+        if let cancelActionIndex = self.actions.firstIndex(where: { $0.style == .preferred }) {
+            let cancelAction = self.actions[cancelActionIndex]
+            self.actions.remove(at: cancelActionIndex)
+            return cancelAction
+        } else {
+            let cancelAction = self.actions.first
+            self.actions.removeFirst()
+            return cancelAction
+        }
     }
 }
